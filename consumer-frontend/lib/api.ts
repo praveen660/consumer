@@ -191,29 +191,32 @@ export async function getTransactionStatus(transactionId: string): Promise<Trans
 }
 
 /**
- * Initiates a service session by calling the backend service endpoint
- * @param serviceId - The unique identifier for the service
- * @returns Promise with form_url and transaction_id
- * @throws Error if the service is not found or the request fails
+ * Initiates a service session by calling the backend service endpoint.
+ * Encryption of user profile happens server-side — backend returns an
+ * encrypted blob ready to be appended to the redirect URL.
+ *
+ * @param endpoint - The service endpoint identifier
+ * @returns sessionId and base64url-encoded encrypted user profile
  */
-export async function startService(endpoint: string): Promise<FormInitiationResponse> {
-  const response = await fetch(`${BACKEND_URL}/api/initiate?endpoint=${endpoint}`, {
+export async function startService(endpoint: string): Promise<{ sessionId: string; encryptedProfile: string }> {
+  const raw = typeof window !== 'undefined' ? localStorage.getItem('authUser') : null;
+  const user = raw ? JSON.parse(raw) : {};
+
+  const response = await fetch(`${BACKEND_URL}/api/initiate-redirect?endpoint=${endpoint}`, {
     method: 'POST',
     headers: getAuthHeaders(),
+    body: JSON.stringify({
+      email: user?.email ?? '',
+    }),
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to start service: ${response.statusText}`);
+    const errorBody = await response.json().catch(() => ({ message: response.statusText }));
+    console.error('[startService] error body:', errorBody);
+    throw new Error(errorBody?.message ?? `Failed to start service: ${response.statusText}`);
   }
 
-  const result = await response.json();
-  
-  // Extract data from the API response structure
-  if (result.data) {
-    return result.data;
-  }
-  
-  return result;
+  return response.json();
 }
 
 /**

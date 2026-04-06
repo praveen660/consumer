@@ -8,28 +8,19 @@ export default function ServiceGrid() {
   const services = getEnabledServices();
 
   const handleServiceInitiate = async (endpoint: string) => {
-    try {
-      const {sessionId} = await startService(endpoint);
-      
-      // Redirect to the form URL
-      window.location.href = `http://localhost:3000/services/verify/${sessionId}`;
-    } catch (error) {
-      // Re-throw error to be handled by ServiceCard component
-      throw error;
-    }
+    // Backend handles OAuth, form initiation, and RSA encryption of user profile
+    const { sessionId, encryptedProfile } = await startService(endpoint);
+    window.location.href = `http://localhost:3000/services/verify/${sessionId}?profile=${encryptedProfile}`;
   };
 
   return (
-    <ul 
+    <ul
       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 list-none"
       aria-label="Available services"
     >
       {services.map((service) => (
         <li key={service.id}>
-          <ServiceCard
-            service={service}
-            onInitiate={handleServiceInitiate}
-          />
+          <ServiceCard service={service} onInitiate={handleServiceInitiate} />
         </li>
       ))}
     </ul>
