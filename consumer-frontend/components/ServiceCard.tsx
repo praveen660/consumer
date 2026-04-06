@@ -42,7 +42,7 @@ export default function ServiceCard({ service, onInitiate }: Readonly<ServiceCar
       aria-label={`${service.name} service card`}
     >
       <div className="flex items-start gap-4 mb-4">
-        <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+        <div className="shrink-0 w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
           <IconComponent className="w-6 h-6 text-blue-600" aria-hidden="true" />
         </div>
         <div className="flex-1">

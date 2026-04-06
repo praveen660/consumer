@@ -11,10 +11,61 @@ export interface TransactionStatus {
 }
 
 export interface AuthResponse {
-  id: string;
-  email: string;
   token: string;
   message: string;
+  user: UserProfile;
+}
+
+export interface UserProfile {
+  _id: string;
+  email: string;
+  full_name?: string;
+  mobile?: string;
+  date_of_birth?: string;
+  gender?: string;
+  address?: {
+    careOf?: string;
+    houseNumber?: string;
+    street?: string;
+    locality?: string;
+    landmark?: string;
+    district?: string;
+    state?: string;
+    pincode?: string;
+    postOffice?: string;
+    subDistrict?: string;
+  };
+  pan?: string;
+  masked_aadhaar?: string;
+  user_type?: string;
+  verified_by?: string;
+  isAccountVerified?: boolean;
+  email_verified?: string;
+  isAadhaarSeeded?: string;
+  createdAt?: string;
+}
+
+export interface SignupAddress {
+  careOf?: string;
+  houseNumber?: string;
+  street?: string;
+  locality?: string;
+  landmark?: string;
+  district: string;
+  state: string;
+  pincode: string;
+  postOffice?: string;
+  subDistrict?: string;
+}
+
+export interface SignupPayload {
+  email: string;
+  password: string;
+  full_name: string;
+  mobile: string;
+  date_of_birth: string;
+  gender: string;
+  address: SignupAddress;
 }
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4001';
@@ -47,18 +98,15 @@ function getAuthHeaders(): HeadersInit {
 
 /**
  * Signs up a new user
- * @param email - User email
- * @param password - User password
+ * @param payload - User registration data including required identity fields
  * @returns Promise with user data and JWT token
  * @throws Error if signup fails
  */
-export async function signup(email: string, password: string): Promise<AuthResponse> {
+export async function signup(payload: SignupPayload): Promise<AuthResponse> {
   const response = await fetch(`${BACKEND_URL}/auth/signup`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ email, password }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
@@ -68,9 +116,12 @@ export async function signup(email: string, password: string): Promise<AuthRespo
 
   const data = await response.json();
   
-  // Store JWT token in localStorage
+  // Store JWT token in localStorage and cookie (cookie needed for middleware auth checks)
   if (data.token) {
     localStorage.setItem('authToken', data.token);
+    localStorage.setItem('authUser', JSON.stringify(data.user));
+    document.cookie = `authToken=${data.token}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`;
+    window.dispatchEvent(new Event('storage'));
   }
   
   return data;
@@ -99,9 +150,12 @@ export async function login(email: string, password: string): Promise<AuthRespon
 
   const data = await response.json();
   
-  // Store JWT token in localStorage
+  // Store JWT token in localStorage and cookie (cookie needed for middleware auth checks)
   if (data.token) {
     localStorage.setItem('authToken', data.token);
+    localStorage.setItem('authUser', JSON.stringify(data.user));
+    document.cookie = `authToken=${data.token}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`;
+    window.dispatchEvent(new Event('storage'));
   }
   
   return data;
@@ -168,5 +222,19 @@ export async function startService(endpoint: string): Promise<FormInitiationResp
 export function logout(): void {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('authUser');
+    document.cookie = 'authToken=; path=/; max-age=0; SameSite=Lax';
   }
+}
+
+/**
+ * Fetches the current user's full profile from the backend
+ */
+export async function getMe(): Promise<UserProfile> {
+  const response = await fetch(`${BACKEND_URL}/auth/me`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) throw new Error('Failed to fetch profile');
+  return response.json();
 }

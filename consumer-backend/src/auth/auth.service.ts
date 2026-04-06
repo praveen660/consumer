@@ -20,7 +20,28 @@ export class AuthService {
     private httpService: HttpService,
   ) {}
 
-  async signup(email: string, password: string) {
+  async signup(dto: {
+    email: string;
+    password: string;
+    full_name: string;
+    mobile: string;
+    date_of_birth: string;
+    gender: string;
+    address: {
+      careOf?: string;
+      houseNumber?: string;
+      street?: string;
+      locality?: string;
+      landmark?: string;
+      district: string;
+      state: string;
+      pincode: string;
+      postOffice?: string;
+      subDistrict?: string;
+    };
+  }) {
+    const { email, password, ...rest } = dto;
+
     // Check if user already exists
     const existingUser = await this.userModel.findOne({ email });
     if (existingUser) {
@@ -34,19 +55,16 @@ export class AuthService {
     const user = await this.userModel.create({
       email,
       password: hashedPassword,
+      ...rest,
     });
 
-    // Generate JWT token
-    const token = this.jwtService.sign({
-      sub: user._id,
-      email: user.email,
-    });
+    const token = this.jwtService.sign({ sub: user._id, email: user.email });
 
+    const { password: _, ...userData } = user.toObject();
     return {
-      id: user._id,
-      email: user.email,
       token,
       message: 'User registered successfully',
+      user: userData,
     };
   }
 
@@ -63,18 +81,20 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    // Generate JWT token
-    const token = this.jwtService.sign({
-      sub: user._id,
-      email: user.email,
-    });
+    const token = this.jwtService.sign({ sub: user._id, email: user.email });
 
+    const { password: _, ...userData } = user.toObject();
     return {
-      id: user._id,
-      email: user.email,
       token,
       message: 'Login successful',
+      user: userData,
     };
+  }
+
+  async getMe(userId: string) {
+    const user = await this.userModel.findById(userId).select('-password').lean();
+    if (!user) throw new UnauthorizedException('User not found');
+    return user;
   }
 
   /**
@@ -94,7 +114,6 @@ export class AuthService {
       const clientId = this.configService.get<string>('CLIENT_ID');
       const clientSecret = this.configService.get<string>('CLIENT_SECRET');
       const platformBaseUrl = this.configService.get<string>('PLATFORM_BASE_URL');
-console.log({platformBaseUrl,clientId,clientSecret})
       // Encode credentials as Basic Auth header
       const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
 
@@ -111,7 +130,6 @@ console.log({platformBaseUrl,clientId,clientSecret})
           },
         ),
       );
-console.log({response},"****")
       // Cache the token and set expiration time
       this.platformAccessToken = response.data.access_token;
       this.tokenExpiresAt = Date.now() + (response.data.expires_in * 1000);

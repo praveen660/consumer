@@ -4,6 +4,12 @@ import userEvent from '@testing-library/user-event';
 import fc from 'fast-check';
 import AuthScreen from './AuthScreen';
 
+// Mock the API module so form submission doesn't make real network calls
+jest.mock('@/lib/api', () => ({
+  login: jest.fn().mockResolvedValue({ id: '1', email: 'test@example.com', token: 'tok', message: 'ok' }),
+  signup: jest.fn().mockResolvedValue({ id: '1', email: 'test@example.com', token: 'tok', message: 'ok' }),
+}));
+
 /**
  * Property-Based Tests for AuthScreen Component
  * 

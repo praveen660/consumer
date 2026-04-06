@@ -3,6 +3,12 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import AuthScreen from './AuthScreen';
 
+// Mock the API module so form submission doesn't make real network calls
+jest.mock('@/lib/api', () => ({
+  login: jest.fn().mockResolvedValue({ id: '1', email: 'test@example.com', token: 'tok', message: 'ok' }),
+  signup: jest.fn().mockResolvedValue({ id: '1', email: 'test@example.com', token: 'tok', message: 'ok' }),
+}));
+
 /**
  * Test Suite for AuthScreen Tab Navigation
  * Validates: Requirements 2.1, 2.3, 5.1, 5.6
