@@ -120,7 +120,7 @@ export async function signup(payload: SignupPayload): Promise<AuthResponse> {
   if (data.token) {
     localStorage.setItem('authToken', data.token);
     localStorage.setItem('authUser', JSON.stringify(data.user));
-    document.cookie = `authToken=${data.token}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`;
+    document.cookie = `token=${data.token}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`;
     window.dispatchEvent(new Event('storage'));
   }
   
@@ -154,7 +154,7 @@ export async function login(email: string, password: string): Promise<AuthRespon
   if (data.token) {
     localStorage.setItem('authToken', data.token);
     localStorage.setItem('authUser', JSON.stringify(data.user));
-    document.cookie = `authToken=${data.token}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`;
+    document.cookie = `token=${data.token}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`;
     window.dispatchEvent(new Event('storage'));
   }
   
@@ -226,7 +226,7 @@ export function logout(): void {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('authToken');
     localStorage.removeItem('authUser');
-    document.cookie = 'authToken=; path=/; max-age=0; SameSite=Lax';
+    document.cookie = 'token=; path=/; max-age=0; SameSite=Lax';
   }
 }
 

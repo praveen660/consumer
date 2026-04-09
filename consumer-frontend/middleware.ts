@@ -21,7 +21,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Check for auth token in cookies (set by the frontend after login)
-  const token = request.cookies.get('authToken')?.value;
+  const token = request.cookies.get('token')?.value;
 
   if (!token) {
     const loginUrl = new URL('/login', request.url);
