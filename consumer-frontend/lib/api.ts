@@ -227,6 +227,7 @@ export function logout(): void {
     localStorage.removeItem('authToken');
     localStorage.removeItem('authUser');
     document.cookie = 'token=; path=/; max-age=0; SameSite=Lax';
+    window.dispatchEvent(new Event('storage'));
   }
 }
 

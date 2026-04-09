@@ -22,8 +22,10 @@ export function middleware(request: NextRequest) {
 
   // Check for auth token in cookies (set by the frontend after login)
   const token = request.cookies.get('token')?.value;
+  // Also check legacy cookie name for backward compatibility
+  const legacyToken = request.cookies.get('authToken')?.value;
 
-  if (!token) {
+  if (!token && !legacyToken) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);

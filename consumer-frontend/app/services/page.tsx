@@ -1,6 +1,19 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import ServiceGrid from '@/components/ServiceGrid'
 
 export default function ServicesPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      router.replace('/login?redirect=/services');
+    }
+  }, [router]);
+
   return (
     <div>
       <div className="mb-8">
